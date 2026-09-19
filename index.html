@@ -1701,6 +1701,14 @@ html&gt;body{padding:0}&lt;/style&gt;
         {name:&#39;Saga Robotics&#39;, segment:&#39;Agricultural robotics&#39;, status:&#39;none&#39;},
         {name:&#39;Brain Corp&#39;, segment:&#39;Warehouse &amp; logistics&#39;, status:&#39;direct&#39;, evidence:&#39;https://www.linkedin.com/company/brain-corporation/posts/&#39;}
       ];
+      // LINKEDIN_DATA_START
+      const linkedInLive = {&quot;refreshedAt&quot;:null,&quot;events&quot;:[]};
+      for (const event of linkedInLive.events) {
+        const found = companies.find(company =&gt; company.name.toLocaleLowerCase() === event.company.name.toLocaleLowerCase());
+        if (found) { found.status = &#39;direct&#39;; found.evidence = event.evidenceUrl || found.evidence; }
+        else companies.push({ name:event.company.name, segment:&#39;Newly discovered&#39;, status:&#39;direct&#39;, evidence:event.evidenceUrl });
+      }
+      // LINKEDIN_DATA_END
       const statusCopy = {
         direct: &#39;Actual company: Robo Reliance commented on the robotics company’s own LinkedIn post&#39;,
         indirect: &#39;Third party only so far: Robo Reliance engaged on a post discussing the company; a direct company-post comment is not yet confirmed&#39;,
@@ -2373,6 +2381,26 @@ html&gt;body{padding:0}&lt;/style&gt;
 })();
 &lt;/script&gt;
 
+&lt;!-- LINKEDIN_AUTOMATION_START --&gt;
+&lt;script&gt;
+(() =&gt; {
+  const live = {&quot;refreshedAt&quot;:null,&quot;events&quot;:[],&quot;companies&quot;:[]};
+  const time = document.querySelector(&#39;.rr-date time&#39;);
+  if (time) {
+    if (live.refreshedAt) { const refreshed = new Date(live.refreshedAt); time.dateTime = refreshed.toISOString(); time.textContent = new Intl.DateTimeFormat(undefined, {dateStyle:&#39;long&#39;,timeStyle:&#39;short&#39;}).format(refreshed); }
+    else { time.removeAttribute(&#39;datetime&#39;); time.textContent = &#39;Awaiting first LinkedIn refresh&#39;; }
+    time.title = &#39;Last successful LinkedIn data refresh&#39;;
+  }
+  const known = new Set([...document.querySelectorAll(&#39;.rr-timeline a&#39;)].map(a =&gt; a.href));
+  const timeline = document.querySelector(&#39;.rr-timeline&#39;);
+  for (const event of [...live.events].reverse()) {
+    if (!timeline || !event.evidenceUrl || known.has(event.evidenceUrl)) continue;
+    const row=document.createElement(&#39;div&#39;); row.className=&#39;rr-event&#39;; const date=document.createElement(&#39;time&#39;); date.dateTime=event.occurredAt||&#39;&#39;; date.textContent=event.occurredAt?new Date(event.occurredAt).toLocaleDateString(undefined,{dateStyle:&#39;medium&#39;}):&#39;Date pending&#39;; const link=document.createElement(&#39;a&#39;); link.href=event.evidenceUrl; link.target=&#39;_blank&#39;; link.rel=&#39;noreferrer&#39;; link.textContent=event.company.name; row.append(date,link); timeline.prepend(row);
+  }
+  const metric=document.querySelector(&#39;.rr-activity-grid .rr-activity-stat strong&#39;); if(metric &amp;&amp; live.events.length) metric.textContent=String(Math.max(20,live.events.length));
+})();
+&lt;/script&gt;
+&lt;!-- LINKEDIN_AUTOMATION_END --&gt;
 &lt;/body&gt;
 &lt;/html&gt;
 "></iframe>
