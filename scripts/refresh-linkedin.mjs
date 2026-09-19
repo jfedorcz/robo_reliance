@@ -27,8 +27,11 @@ async function notifications() {
   if (fixtureDir) return (await request('', 'notifications.json')).elements || [];
   const found = [];
   for (let start = 0;; start += 100) {
-    const params = new URLSearchParams({ q:'criteria', actions:'List(ADMIN_COMMENT,COMMENT_EDIT,COMMENT_DELETE)', organizationalEntity:`urn:li:organization:${organizationId}`, start:String(start), count:'100' });
-    const elements = (await request(`${API}/organizationalEntityNotifications?${params}`)).elements || [];
+    // Rest.li list syntax must remain literal. URLSearchParams percent-encodes
+    // List(...) and causes LinkedIn to reject the actions array as a DataList.
+    const organization = encodeURIComponent(`urn:li:organization:${organizationId}`);
+    const query = `q=criteria&actions=List(ADMIN_COMMENT,COMMENT_EDIT,COMMENT_DELETE)&organizationalEntity=${organization}&start=${start}&count=100`;
+    const elements = (await request(`${API}/organizationalEntityNotifications?${query}`)).elements || [];
     found.push(...elements);
     if (elements.length < 100) return found;
   }
